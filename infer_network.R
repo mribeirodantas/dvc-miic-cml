@@ -1,0 +1,7 @@
+library(miic)
+alarm_dataset <- read.table('data/alarm.tsv', header = TRUE)
+res <- miic(input_data = alarm_dataset)
+total_edges <- nrow(res$all.edges.summary)
+retained_edges <- nrow(res$all.edges.summary[res$all.edges.summary$type == 'P', ])
+ratio_edges <- paste0('Ratio of retained edges: ', retained_edges/total_edges)
+write.table(ratio_edges, file = 'metrics.txt', col.names = FALSE, row.names = FALSE)

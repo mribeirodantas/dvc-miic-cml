@@ -1,0 +1,37 @@
+name: dvc-cml-miic
+on: [push]
+jobs:
+  run:
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: r-lib/actions/setup-r@master
+        with:
+          version: '3.6.1'
+      - uses: actions/checkout@v2
+      - name: cml_run
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
+        run: |
+
+          # Install miic and dependencies
+          wget -c https://github.com/miicTeam/miic_R_package/archive/v1.4.2.tar.gz
+          tar -xvzf v1.4.2.tar.gz
+          cd miic_R_package-1.4.2
+          R --silent -e "install.packages(c(\"igraph\", \"ppcor\", \"scales\", \"Rcpp\"))"
+          R CMD INSTALL . --preclean
+          cd ..
+          # Install Python packages
+          pip install --upgrade pip
+          pip install wheel
+          pip install PyDrive2==1.6.0 --use-feature=2020-resolver
+          # Install DVC
+          wget -c https://github.com/iterative/dvc/releases/download/1.4.0/dvc_1.4.0_amd64.deb
+          sudo apt install ./dvc_1.4.0_amd64.deb
+          # Run DVC
+          dvc pull
+          Rscript infer_network.R
+
+          # Write your CML report
+          echo "MODEL METRICS"
+          cat metrics.txt
