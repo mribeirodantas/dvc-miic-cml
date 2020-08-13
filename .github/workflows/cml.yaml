@@ -13,7 +13,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA }}
         run: |
-
           # Install miic and dependencies
           wget -c https://github.com/miicTeam/miic_R_package/archive/v1.4.2.tar.gz
           tar -xvzf v1.4.2.tar.gz
@@ -31,7 +30,12 @@ jobs:
           # Run DVC
           dvc pull
           Rscript infer_network.R
-
+          # Install CML
+          npm init --yes
+          npm i @dvcorg/cml@latest
           # Write your CML report
-          echo "MODEL METRICS"
-          cat metrics.txt
+          echo "## Model Metrics" > report.md
+          cat metrics.txt >> report.md
+          echo "## Data visualization" >> report.md
+          npx cml-publish network_diagram.png --md >> report.md
+          npx cml-send-comment report.md
