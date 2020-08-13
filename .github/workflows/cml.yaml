@@ -3,11 +3,14 @@ on: [push]
 jobs:
   run:
     runs-on: [ubuntu-latest]
+    container: docker://dvcorg/cml
     steps:
+      - uses: actions/checkout@v2
+        
       - uses: r-lib/actions/setup-r@master
         with:
           version: '3.6.1'
-      - uses: actions/checkout@v2
+
       - name: cml_run
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -20,22 +23,14 @@ jobs:
           R --silent -e "install.packages(c(\"igraph\", \"ppcor\", \"scales\", \"Rcpp\"))"
           R CMD INSTALL . --preclean
           cd ..
-          # Install Python packages
-          pip install --upgrade pip
-          pip install wheel
-          pip install PyDrive2==1.6.0 --use-feature=2020-resolver
-          # Install DVC
-          wget -c https://github.com/iterative/dvc/releases/download/1.4.0/dvc_1.4.0_amd64.deb
-          sudo apt install ./dvc_1.4.0_amd64.deb
+
           # Run DVC
           dvc pull
           Rscript infer_network.R
-          # Install CML
-          npm init --yes
-          npm i @dvcorg/cml@latest
+
           # Write your CML report
           echo "## Model Metrics" > report.md
           cat metrics.txt >> report.md
           echo "## Data visualization" >> report.md
-          npx cml-publish network_diagram.png --md >> report.md
-          npx cml-send-comment report.md
+          cml-publish network_diagram.png --md >> report.md
+          cml-send-comment report.md
